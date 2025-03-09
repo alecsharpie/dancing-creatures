@@ -124,13 +124,34 @@ const PoseEstimation: React.FC = () => {
         : poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
       
       // Use local model path with the correct base path
-      // The issue is that we need to include the base path for development
       const baseUrl = import.meta.env.DEV ? '' : '/dancing-creatures';
       const modelPath = multiPoseMode 
         ? `${baseUrl}/models/movenet/multipose/lightning/1/model.json`
         : `${baseUrl}/models/movenet/singlepose/lightning/4/model.json`;
       
-      logger.info("Creating detector with local model", { modelPath, baseUrl, isDev: import.meta.env.DEV });
+      logger.info("Creating detector with local model", { 
+        modelPath, 
+        baseUrl, 
+        isDev: import.meta.env.DEV,
+        fullUrl: window.location.origin + modelPath
+      });
+      
+      // Try to fetch the model.json first to verify it's accessible
+      try {
+        const response = await fetch(modelPath);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch model.json: ${response.status} ${response.statusText}`);
+        }
+        const modelJson = await response.json();
+        logger.info("Successfully fetched model.json", { 
+          modelFormat: modelJson.format, 
+          modelVersion: modelJson.modelTopology?.keras_version || 'unknown' 
+        });
+      } catch (fetchError) {
+        logger.error("Error pre-fetching model.json:", fetchError);
+        // Continue anyway, as the detector will try to load it again
+      }
+      
       const newDetector = await poseDetection.createDetector(
         poseDetection.SupportedModels.MoveNet,
         { 

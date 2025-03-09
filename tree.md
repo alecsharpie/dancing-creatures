@@ -1,11 +1,30 @@
 .
 ├── README.md
+├── dist
+│   ├── assets
+│   │   ├── index-B9RtELQV.js
+│   │   └── index-CNObhpSX.css
+│   ├── index.html
+│   ├── models
+│   │   └── movenet
+│   │       ├── multipose
+│   │       │   └── lightning
+│   │       │       └── 1
+│   │       │           ├── group1-shard1of3.bin
+│   │       │           ├── group1-shard2of3.bin
+│   │       │           ├── group1-shard3of3.bin
+│   │       │           └── model.json
+│   │       └── singlepose
+│   │           └── lightning
+│   │               └── 4
+│   │                   ├── group1-shard1of2.bin
+│   │                   ├── group1-shard2of2.bin
+│   │                   └── model.json
+│   └── vite.svg
 ├── eslint.config.js
 ├── index.html
 ├── package-lock.json
 ├── package.json
-├── node_modules
-│   └── ...
 ├── public
 │   ├── models
 │   │   └── movenet

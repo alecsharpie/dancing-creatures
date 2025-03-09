@@ -83,8 +83,24 @@ function downloadFile(url, dest, retries = 3, timeout = 60000) {
       
       file.on('finish', () => {
         file.close(() => {
-          logger.success(`Downloaded: ${dest} (${Math.round(downloadedBytes/1024)} KB)`);
-          resolve();
+          // Verify the file exists and has content
+          fs.stat(dest, (err, stats) => {
+            if (err) {
+              logger.error(`Error verifying downloaded file ${dest}:`, err);
+              reject(err);
+              return;
+            }
+            
+            if (stats.size === 0) {
+              logger.error(`Downloaded file ${dest} is empty`);
+              fs.unlink(dest, () => {});
+              reject(new Error(`Downloaded file ${dest} is empty`));
+              return;
+            }
+            
+            logger.success(`Downloaded: ${dest} (${Math.round(downloadedBytes/1024)} KB)`);
+            resolve();
+          });
         });
       });
     }).on('error', err => {
@@ -132,6 +148,47 @@ const multiPoseShardUrl1 = 'https://www.kaggle.com/models/google/movenet/tfJs/mu
 const multiPoseShardUrl2 = 'https://www.kaggle.com/models/google/movenet/tfJs/multipose-lightning/1/group1-shard2of3.bin?tfjs-format=file&tfhub-redirect=true';
 const multiPoseShardUrl3 = 'https://www.kaggle.com/models/google/movenet/tfJs/multipose-lightning/1/group1-shard3of3.bin?tfjs-format=file&tfhub-redirect=true';
 
+// After downloading, verify model files
+async function verifyModels() {
+  const singlePoseModelPath = path.join(modelsDir, 'model.json');
+  const multiPoseModelPath = path.join(multiPoseDir, 'model.json');
+  
+  try {
+    // Check if model.json files exist and are valid JSON
+    const singlePoseModelContent = fs.readFileSync(singlePoseModelPath, 'utf8');
+    const multiPoseModelContent = fs.readFileSync(multiPoseModelPath, 'utf8');
+    
+    try {
+      JSON.parse(singlePoseModelContent);
+      JSON.parse(multiPoseModelContent);
+      logger.success('Model JSON files are valid');
+    } catch (e) {
+      logger.error('Model JSON files contain invalid JSON:', e);
+    }
+    
+    // Check if shard files exist
+    const singlePoseShard1 = path.join(modelsDir, 'group1-shard1of2.bin');
+    const singlePoseShard2 = path.join(modelsDir, 'group1-shard2of2.bin');
+    const multiPoseShard1 = path.join(multiPoseDir, 'group1-shard1of3.bin');
+    const multiPoseShard2 = path.join(multiPoseDir, 'group1-shard2of3.bin');
+    const multiPoseShard3 = path.join(multiPoseDir, 'group1-shard3of3.bin');
+    
+    const files = [
+      singlePoseShard1, singlePoseShard2,
+      multiPoseShard1, multiPoseShard2, multiPoseShard3
+    ];
+    
+    for (const file of files) {
+      const stats = fs.statSync(file);
+      logger.info(`Shard file ${path.basename(file)}: ${Math.round(stats.size/1024)} KB`);
+    }
+    
+    logger.success('All model files verified');
+  } catch (error) {
+    logger.error('Error verifying model files:', error);
+  }
+}
+
 // Download models
 async function downloadModels() {
   try {
@@ -147,6 +204,9 @@ async function downloadModels() {
     await downloadFile(multiPoseShardUrl3, path.join(multiPoseDir, 'group1-shard3of3.bin'));
     
     logger.success('All models downloaded successfully');
+    
+    // Verify the downloaded models
+    await verifyModels();
   } catch (error) {
     logger.error('Error downloading models:', error);
   }
