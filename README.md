@@ -67,6 +67,8 @@ To deploy to GitHub Pages:
 npm run deploy
 ```
 
+---
+
 ## Technology Stack
 
 - React 19
@@ -75,32 +77,8 @@ npm run deploy
 - Vite
 - HTML5 Canvas API
 
-## License
-
-MIT
-
 ---
 
 ## Development Notes
 
 This project was bootstrapped with Vite using the React TypeScript template.
-
-### Available Scripts
-
-- `npm run dev` - Start the development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview the production build locally
-- `npm run lint` - Run ESLint
-- `npm run deploy` - Deploy to GitHub Pages
-
-## Creature Visualization
-
-The application transforms your pose into a fun, animated creature:
-
-- Your body's pose is detected in real-time using TensorFlow.js
-- The creature's limbs follow your arms and legs with smooth, curved lines
-- The creature's eyes follow your face movements
-- Each person detected gets their own uniquely colored creature
-- The movements are smoothed using Kalman filtering and interpolation
-
-You can toggle debug mode to see how the pose detection works underneath!

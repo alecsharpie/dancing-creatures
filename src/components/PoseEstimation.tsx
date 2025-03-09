@@ -212,6 +212,9 @@ const PoseEstimation: React.FC = () => {
   const [trackedPoses, setTrackedPoses] = useState<TrackedPose[]>([]);
   const [isDebugRendering, setIsDebugRendering] = useState<boolean>(false);
 
+  /**
+   * Updates the canvas size based on the container dimensions
+   */
   const updateCanvasSize = useCallback(() => {
     if (containerRef.current) {
       const width = containerRef.current.clientWidth;
@@ -514,9 +517,9 @@ const PoseEstimation: React.FC = () => {
             // Clear the debug canvas first
             debugCtx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw video feed with opacity
+            // Draw video feed with consistent opacity
             debugCtx.save();
-            debugCtx.globalAlpha = 0.9;
+            debugCtx.globalAlpha = 0.9; // Higher opacity for smoother video
             debugCtx.scale(-1, 1);
             debugCtx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
             debugCtx.restore();
@@ -599,7 +602,9 @@ const PoseEstimation: React.FC = () => {
     trackedPoses,
   ]);
 
-  // Simplify toggle debug mode function
+  /**
+   * Toggles debug mode on/off
+   */
   const toggleDebugMode = useCallback(() => {
     if (!debugMode) {
       setDebugMode(true);
