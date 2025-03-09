@@ -77,14 +77,15 @@ const blob: Creature = {
     // Get chest area points
     const leftShoulder = keypoints.find(kp => kp.name === "left_shoulder");
     const rightShoulder = keypoints.find(kp => kp.name === "right_shoulder");
-    
+
     // Draw simplified chest wiggles if we have the shoulder points
     if (leftShoulder && rightShoulder) {
       const chestCenterX = (leftShoulder.x + rightShoulder.x) / 2;
       const chestCenterY = (leftShoulder.y + rightShoulder.y) / 2 + 20;
       const chestWidth = Math.abs(leftShoulder.x - rightShoulder.x) * 0.8;
       
-      const hairCount = 5;
+      // Draw fewer, simpler wiggles
+      const hairCount = 5
       const hairSpacing = chestWidth / (hairCount - 1);
       
       ctx.lineWidth = 3; // Thinner lines for wiggles
@@ -95,12 +96,13 @@ const blob: Creature = {
         const offsetY = Math.cos(i * 1.7) * 2;
         const hairX = chestCenterX - chestWidth/2 + i * hairSpacing + offsetX;
         
+        // Shorter length
         const hairLength = 10 + Math.sin(i * 0.8) * 5;
         
         ctx.beginPath();
         ctx.moveTo(hairX, chestCenterY + offsetY);
         
-        // Simple wiggle pattern
+        // Simpler wiggle pattern with fewer curls
         const curlTightness = 5 + Math.sin(i) * 2;
         const curlCount = 2; // Fixed smaller number of curls
         
@@ -115,7 +117,7 @@ const blob: Creature = {
           if (j === 0) {
             ctx.lineTo(curlX, curlY);
           } else {
-            // Wiggle pattern
+            // Simpler control points with less wiggle
             ctx.quadraticCurveTo(
               hairX + Math.sin((j-0.5)/curlCount * Math.PI * 2 * curlDirection) * curlTightness,
               chestCenterY + offsetY + (j-0.5)/curlCount * hairLength,
@@ -129,7 +131,7 @@ const blob: Creature = {
       }
       
       // Reset line width for limbs
-      ctx.lineWidth = 20;
+      ctx.lineWidth = 8;
     }
     
     // Draw left side as one continuous bezier curve
@@ -298,6 +300,24 @@ const PoseEstimation: React.FC = () => {
       } catch (error) {
         logger.error("Error setting up camera:", error);
         setIsLoading(false);
+        
+        // Add a more user-friendly error message
+        const errorMessage = document.createElement('div');
+        errorMessage.style.position = 'absolute';
+        errorMessage.style.top = '50%';
+        errorMessage.style.left = '50%';
+        errorMessage.style.transform = 'translate(-50%, -50%)';
+        errorMessage.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        errorMessage.style.color = 'white';
+        errorMessage.style.padding = '20px';
+        errorMessage.style.borderRadius = '10px';
+        errorMessage.style.textAlign = 'center';
+        errorMessage.innerHTML = `
+          <h3>Camera Access Error</h3>
+          <p>Please allow camera access to use this application.</p>
+          <p>You may need to refresh the page and try again.</p>
+        `;
+        document.body.appendChild(errorMessage);
       }
     };
 
@@ -313,6 +333,44 @@ const PoseEstimation: React.FC = () => {
     };
   }, []);
 
+  // Optimize the pose detection interval
+  // Around line 391, increase the detection interval further
+  const poseDetectionInterval = 15; // Detect poses less frequently (every 15 frames)
+
+  /**
+   * Calculates the distance between two poses for tracking purposes
+   * @param pose1 First pose keypoints
+   * @param pose2 Second pose keypoints
+   * @returns Average distance between corresponding keypoints
+   */
+  const calculatePoseDistance = (pose1: Keypoint[], pose2: Keypoint[]): number => {
+    // Use multiple keypoints for more reliable tracking
+    const keyPointPairs = [
+      ['nose', 'nose'],
+      ['left_shoulder', 'left_shoulder'],
+      ['right_shoulder', 'right_shoulder']
+    ];
+    
+    let totalDistance = 0;
+    let validPairs = 0;
+    
+    keyPointPairs.forEach(([name1, name2]) => {
+      const kp1 = pose1.find(kp => kp.name === name1);
+      const kp2 = pose2.find(kp => kp.name === name2);
+      
+      if (kp1 && kp2) {
+        const distance = Math.sqrt(
+          Math.pow(kp1.x - kp2.x, 2) + 
+          Math.pow(kp1.y - kp2.y, 2)
+        );
+        totalDistance += distance;
+        validPairs++;
+      }
+    });
+    
+    return validPairs > 0 ? totalDistance / validPairs : Infinity;
+  };
+
   // Run pose detection loop
   useEffect(() => {
     let animationFrameId: number;
@@ -324,38 +382,13 @@ const PoseEstimation: React.FC = () => {
     const debugCanvas = document.createElement('canvas');
     debugCanvas.width = canvasSize.width;
     debugCanvas.height = canvasSize.height;
-    debugCtx = debugCanvas.getContext('2d', { willReadFrequently: true });
-    
-    // Improve the pose tracking logic to prevent duplicates
-    const calculatePoseDistance = (pose1: Keypoint[], pose2: Keypoint[]): number => {
-      // Use multiple keypoints for more reliable tracking
-      const keyPointPairs = [
-        ['nose', 'nose'],
-        ['left_shoulder', 'left_shoulder'],
-        ['right_shoulder', 'right_shoulder']
-      ];
-      
-      let totalDistance = 0;
-      let validPairs = 0;
-      
-      keyPointPairs.forEach(([name1, name2]) => {
-        const kp1 = pose1.find(kp => kp.name === name1);
-        const kp2 = pose2.find(kp => kp.name === name2);
-        
-        if (kp1 && kp2) {
-          const distance = Math.sqrt(
-            Math.pow(kp1.x - kp2.x, 2) + 
-            Math.pow(kp1.y - kp2.y, 2)
-          );
-          totalDistance += distance;
-          validPairs++;
-        }
-      });
-      
-      return validPairs > 0 ? totalDistance / validPairs : Infinity;
-    };
-  
-    const detectPose = async () => {
+    debugCtx = debugCanvas.getContext('2d', { 
+      willReadFrequently: true,
+      alpha: false // Optimize for performance
+    });
+
+    // Define detectPose first, before it's used
+    async function detectPose() {
       // Skip if not ready
       if (
         !detector ||
@@ -387,8 +420,7 @@ const PoseEstimation: React.FC = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   
       try {
-        // Only do pose detection at reduced frequency
-        const poseDetectionInterval = 5;
+        // Around line 391, increase the detection interval
         const shouldEstimatePose = frameCount % poseDetectionInterval === 0;
         
         if (shouldEstimatePose) {
@@ -398,16 +430,15 @@ const PoseEstimation: React.FC = () => {
             scoreThreshold: 0.4
           });
           
-          // Transform keypoints to canvas coordinates and filter for higher quality poses
+          // Transform keypoints to canvas coordinates
           const currentPoses = poses
             .filter(pose => {
-              // Only keep poses with a good overall score
               const avgScore = pose.keypoints.reduce((sum, kp) => sum + (kp.score || 0), 0) / pose.keypoints.length;
-              return avgScore > 0.45; // Higher threshold for overall pose quality
+              return avgScore > 0.45;
             })
             .map(pose => ({
               keypoints: pose.keypoints
-                .filter(kp => kp.score && kp.score > 0.4) // Higher threshold for individual keypoints
+                .filter(kp => kp.score && kp.score > 0.4)
                 .map((keypoint) => ({
                   name: keypoint.name || 'unknown',
                   x: canvas.width - (keypoint.x / video.videoWidth) * canvas.width,
@@ -415,24 +446,15 @@ const PoseEstimation: React.FC = () => {
                   score: keypoint.score
                 }))
             }))
-            .filter(pose => {
-              // Ensure we have enough keypoints for a meaningful pose
-              // Specifically require key points like shoulders and hips
-              const requiredPoints = ["nose", "left_shoulder", "right_shoulder"];
-              const hasRequiredPoints = requiredPoints.every(
-                name => pose.keypoints.some(kp => kp.name === name)
-              );
-              return pose.keypoints.length >= 7 && hasRequiredPoints;
-            });
+            .filter(pose => pose.keypoints.length >= 7);
           
-          // Update tracked poses with stricter matching
+          // Update tracked poses with simpler matching
           const now = Date.now();
           const updatedTrackedPoses = [...trackedPoses];
           
           // Match current poses with tracked poses
           currentPoses.forEach(currentPose => {
-            // Find the closest tracked pose with a stricter threshold
-            let closestDistance = 40; // Even stricter threshold
+            let closestDistance = 40;
             let closestPoseIndex = -1;
             
             updatedTrackedPoses.forEach((trackedPose, index) => {
@@ -443,7 +465,6 @@ const PoseEstimation: React.FC = () => {
               }
             });
             
-            // Only update if we're confident this is the same person
             if (closestPoseIndex !== -1 && closestDistance < 40) {
               // Update existing tracked pose
               updatedTrackedPoses[closestPoseIndex] = {
@@ -452,8 +473,7 @@ const PoseEstimation: React.FC = () => {
                 lastSeen: now
               };
             } else {
-              // Only add new tracked pose if we have enough confidence
-              // and it's not too close to existing poses
+              // Add new tracked pose
               const isTooClose = updatedTrackedPoses.some(pose => 
                 calculatePoseDistance(currentPose.keypoints, pose.keypoints) < 100
               );
@@ -470,10 +490,10 @@ const PoseEstimation: React.FC = () => {
             }
           });
           
-          // Remove poses that haven't been seen recently or have too few keypoints
+          // Remove poses that haven't been seen recently
           const filteredPoses = updatedTrackedPoses
-            .filter(pose => now - pose.lastSeen < 1500) // Even shorter timeout
-            .filter(pose => pose.keypoints.length >= 7); // Ensure we still have enough keypoints
+            .filter(pose => now - pose.lastSeen < 1500)
+            .filter(pose => pose.keypoints.length >= 7);
           
           setTrackedPoses(filteredPoses);
         }
@@ -551,7 +571,14 @@ const PoseEstimation: React.FC = () => {
   
       isDetecting = false;
       animationFrameId = requestAnimationFrame(detectPose);
-    };
+    }
+  
+    // Now use detectPose after it's defined
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      animationFrameId = requestAnimationFrame(detectPose);
+      return;
+    }
   
     // Start detection loop
     detectPose();
@@ -671,8 +698,30 @@ const PoseEstimation: React.FC = () => {
       {/* Loading indicator */}
       {isLoading && (
         <div style={loadingStyle}>
-          <p>Loading model...</p>
-          <p>This may take a moment</p>
+          <p style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Loading model...</p>
+          <p>This may take a moment on slower connections</p>
+          <div style={{ 
+            width: '100%', 
+            height: '10px', 
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            borderRadius: '5px',
+            marginTop: '15px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: '30%',
+              height: '100%',
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderRadius: '5px',
+              animation: 'loading 1.5s infinite ease-in-out'
+            }}></div>
+          </div>
+          <style>{`
+            @keyframes loading {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(400%); }
+            }
+          `}</style>
         </div>
       )}
       

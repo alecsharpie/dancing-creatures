@@ -5,6 +5,7 @@
 ├── package-lock.json
 ├── package.json
 ├── public
+│   ├── favicon.svg
 │   ├── models
 │   │   └── movenet
 │   │       └── multipose
@@ -14,13 +15,11 @@
 │   │                   ├── group1-shard2of3.bin
 │   │                   ├── group1-shard3of3.bin
 │   │                   └── model.json
-│   ├── test-models.html
-│   └── vite.svg
+│   └── test-models.html
 ├── src
 │   ├── App.css
 │   ├── App.tsx
 │   ├── assets
-│   │   └── react.svg
 │   ├── components
 │   │   └── PoseEstimation.tsx
 │   ├── index.css
@@ -31,3 +30,5 @@
 ├── tsconfig.json
 ├── tsconfig.node.json
 └── vite.config.ts
+
+10 directories, 22 files

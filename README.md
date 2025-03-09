@@ -17,8 +17,8 @@ Visit the live demo: [Dancing Creatures](https://alecsharpie.github.io/dancing-c
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm (v7 or higher)
+- Node.js
+- npm
 
 ### Installation
 
@@ -90,3 +90,15 @@ This project was bootstrapped with Vite using the React TypeScript template.
 - `npm run preview` - Preview the production build locally
 - `npm run lint` - Run ESLint
 - `npm run deploy` - Deploy to GitHub Pages
+
+## Creature Visualization
+
+The application transforms your pose into a fun, animated creature:
+
+- Your body's pose is detected in real-time using TensorFlow.js
+- The creature's limbs follow your arms and legs with smooth, curved lines
+- The creature's eyes follow your face movements
+- Each person detected gets their own uniquely colored creature
+- The movements are smoothed using Kalman filtering and interpolation
+
+You can toggle debug mode to see how the pose detection works underneath!
