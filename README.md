@@ -1,63 +1,92 @@
-# Dance
+# Dancing Creatures
 
-This is a simple dance app that uses the MoveNet model from TensorFlow.js to detect and track human poses.
+A fun web application that uses TensorFlow.js and the MoveNet pose detection model to transform your movements into animated creatures. Move in front of your camera and watch as the app tracks your poses in real-time!
 
-# Setup
-1. Install dependencies: npm install
-2. Download TensorFlow models: npm run download-models
-3. Start the development server: npm run dev
+## Features
 
-# React + TypeScript + Vite
+- Real-time pose detection using TensorFlow.js
+- Animated creature visualization that follows your movements
+- Debug mode to visualize detected keypoints
+- Works in any modern browser with camera access
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Demo
 
-Currently, two official plugins are available:
+Visit the live demo: [Dancing Creatures](https://alecsharpie.github.io/dancing-creatures)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (v16 or higher)
+- npm (v7 or higher)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### Installation
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/alecsharpie/dancing-creatures.git
+   cd dancing-creatures
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Get the TensorFlow.js MoveNet model:
+
+   **Option 1: Manual download**
+   - Visit [Kaggle Models: Google MoveNet](https://www.kaggle.com/models/google/movenet/tfJs?select=model.json)
+   - Navigate to TensorFlow.js > multipose-lightning > File Explorer
+   - Download all files (model.json and the shard files)
+   - Create directory: `public/models/movenet/multipose/lightning/1/`
+   - Place the downloaded files in this directory
+
+4. Start the development server:
+   ```
+   npm run dev
+   ```
+
+5. Open your browser and navigate to `http://localhost:5173`
+
+## Building and Deployment
+
+Build for production:
+
+```
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This will create a `dist` directory with the production build. You can then deploy this directory to your preferred static site hosting service.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+To deploy to GitHub Pages:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
 ```
+npm run deploy
+```
+
+## Technology Stack
+
+- React 19
+- TypeScript
+- TensorFlow.js
+- Vite
+- HTML5 Canvas API
+
+## License
+
+MIT
+
+---
+
+## Development Notes
+
+This project was bootstrapped with Vite using the React TypeScript template.
+
+### Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview the production build locally
+- `npm run lint` - Run ESLint
+- `npm run deploy` - Deploy to GitHub Pages

@@ -11,7 +11,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "download-models": "node scripts/download-model.js",
+    "download-models": "bash scripts/download-model.sh",
     "copy-models": "cp -r public/models dist/"
   },
   "dependencies": {
