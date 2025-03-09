@@ -2,6 +2,22 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as poseDetection from "@tensorflow-models/pose-detection";
 
+// Add a logger utility
+const logger = {
+  info: (message: string, ...data: any[]) => {
+    console.log(`%c[INFO] ${message}`, 'color: #3b82f6', ...data);
+  },
+  warn: (message: string, ...data: any[]) => {
+    console.warn(`%c[WARN] ${message}`, 'color: #f59e0b', ...data);
+  },
+  error: (message: string, ...data: any[]) => {
+    console.error(`%c[ERROR] ${message}`, 'color: #ef4444', ...data);
+  },
+  success: (message: string, ...data: any[]) => {
+    console.log(`%c[SUCCESS] ${message}`, 'color: #10b981', ...data);
+  }
+};
+
 // Define TypeScript interfaces
 interface Keypoint {
   name: string;
@@ -92,60 +108,40 @@ const PoseEstimation: React.FC = () => {
   }, []);
 
   const createDetector = useCallback(async () => {
+    logger.info("Starting detector creation...", { multiPoseMode });
     setIsChangingMode(true);
-    if (detector) {
-      await detector.dispose();
-    }
     
     try {
+      // Dispose previous detector if it exists
+      if (detector) {
+        logger.info("Disposing previous detector");
+        await detector.dispose();
+        // Set to null immediately to prevent race conditions
+        setDetector(null);
+      }
+      
       const modelType = multiPoseMode
         ? poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING
         : poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
       
-      // Get the base URL for the models - ensure it has a trailing slash
-      let baseUrl = import.meta.env.BASE_URL || '/';
-      if (!baseUrl.endsWith('/')) {
-        baseUrl += '/';
-      }
-      
-      // Log the full URL to help with debugging
-      const modelUrl = multiPoseMode
-        ? `${baseUrl}assets/models/movenet_multipose_lightning_1.json`
-        : `${baseUrl}assets/models/movenet_singlepose_lightning_4.json`;
-      
-      console.log("Attempting to load model from:", modelUrl);
-      
-      // Configure the detector to use local model files
-      const detectorConfig = {
-        modelType,
-        modelUrl
-      };
-      
-      let newDetector;
-      try {
-        newDetector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          detectorConfig
-        );
-      } catch (localModelError) {
-        console.warn("Failed to load local model, falling back to CDN:", localModelError);
-        
-        // Fall back to the CDN model if local model fails
-        newDetector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
-          { modelType }
-        );
-      }
+      logger.info("Creating detector with CDN model");
+      const newDetector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        { modelType }
+      );
+      logger.success("Successfully created detector with CDN model");
       
       setDetector(newDetector);
     } catch (error) {
-      console.error("Error creating detector:", error);
+      logger.error("Error creating detector:", error);
     } finally {
       setIsChangingMode(false);
+      logger.info("Detector creation process completed");
     }
   }, [multiPoseMode, detector]);
 
   useEffect(() => {
+    logger.info("Initializing canvas size");
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
     return () => window.removeEventListener("resize", updateCanvasSize);
@@ -153,19 +149,34 @@ const PoseEstimation: React.FC = () => {
 
   useEffect(() => {
     const initializeTF = async () => {
-      await tf.ready();
-      await tf.setBackend("webgl");
-      createDetector();
+      logger.info("Initializing TensorFlow.js");
+      try {
+        await tf.ready();
+        logger.info("TensorFlow.js ready");
+        
+        logger.info("Setting TensorFlow.js backend to WebGL");
+        await tf.setBackend("webgl");
+        logger.info("TensorFlow.js backend set to:", tf.getBackend());
+        
+        // Only create detector once during initialization
+        if (!detector) {
+          logger.info("Starting detector creation");
+          await createDetector();
+          logger.success("Initial detector creation completed");
+        }
+      } catch (error) {
+        logger.error("Error initializing TensorFlow:", error);
+      }
     };
 
     initializeTF();
-  }, [createDetector]);
+  }, [createDetector]); // Only depend on createDetector
 
   useEffect(() => {
-    if (!isChangingMode) {
+    if (!isChangingMode && detector) {
       createDetector();
     }
-  }, [multiPoseMode, createDetector, isChangingMode]);
+  }, [multiPoseMode, createDetector, isChangingMode, detector]);
 
   useEffect(() => {
     const setupCamera = async () => {
@@ -213,6 +224,7 @@ const PoseEstimation: React.FC = () => {
       const ctx = canvas.getContext("2d");
 
       if (!ctx) {
+        logger.warn("Could not get canvas context");
         isDetecting = false;
         animationFrameId = requestAnimationFrame(detectPose);
         return;
@@ -228,15 +240,29 @@ const PoseEstimation: React.FC = () => {
       }
 
       try {
+        // Don't use tf.tidy with async functions
         const poses = await detector.estimatePoses(video);
+        
+        // Clean up tensors manually after using them
+        tf.engine().endScope();
+        
+        if (poses.length > 0) {
+          logger.info(`Detected ${poses.length} poses`);
+        }
 
-        poses.forEach((tfPose: any, index: number) => {
-          const keypoints = tfPose.keypoints.map((keypoint: any) => ({
+        poses.forEach((pose, index) => {
+          const keypoints = pose.keypoints.map((keypoint) => ({
             name: keypoint.name || 'unknown',
             x: canvas.width - (keypoint.x / video.videoWidth) * canvas.width,
             y: (keypoint.y / video.videoHeight) * canvas.height,
             score: keypoint.score
           }));
+
+          // Log keypoint scores if in debug mode
+          if (debugMode && index === 0) {
+            const scores = keypoints.map(kp => ({ name: kp.name, score: kp.score }));
+            logger.info("Keypoint scores for first pose:", scores);
+          }
 
           const creature = creatures[currentCreature];
           const hue = multiPoseMode ? (index * 137) % 360 : 120;
@@ -246,7 +272,7 @@ const PoseEstimation: React.FC = () => {
           creature.eyes(ctx, keypoints);
 
           if (debugMode) {
-            keypoints.forEach((keypoint: Keypoint) => {
+            keypoints.forEach((keypoint) => {
               ctx.beginPath();
               ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
               ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
@@ -257,7 +283,7 @@ const PoseEstimation: React.FC = () => {
           }
         });
       } catch (error) {
-        console.error("Error in pose estimation:", error);
+        logger.error("Error in pose estimation:", error);
       }
 
       isDetecting = false;

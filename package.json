@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "copy-models": "cp -r public/models dist/",
+    "copy-models": "cp -r public/assets dist/",
     "download-models": "node scripts/download-model.js"
   },
   "dependencies": {
