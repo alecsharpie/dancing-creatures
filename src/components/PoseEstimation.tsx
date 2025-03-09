@@ -70,7 +70,7 @@ const blob: Creature = {
   },
   limbs: (ctx, keypoints) => {
     // Set line style
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 20;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     
@@ -84,8 +84,7 @@ const blob: Creature = {
       const chestCenterY = (leftShoulder.y + rightShoulder.y) / 2 + 20;
       const chestWidth = Math.abs(leftShoulder.x - rightShoulder.x) * 0.8;
       
-      // Use same number of wiggles regardless of debug mode
-      const hairCount = 4;
+      const hairCount = 5;
       const hairSpacing = chestWidth / (hairCount - 1);
       
       ctx.lineWidth = 3; // Thinner lines for wiggles
@@ -96,13 +95,12 @@ const blob: Creature = {
         const offsetY = Math.cos(i * 1.7) * 2;
         const hairX = chestCenterX - chestWidth/2 + i * hairSpacing + offsetX;
         
-        // Shorter length
         const hairLength = 10 + Math.sin(i * 0.8) * 5;
         
         ctx.beginPath();
         ctx.moveTo(hairX, chestCenterY + offsetY);
         
-        // Simpler wiggle pattern with fewer curls
+        // Simple wiggle pattern
         const curlTightness = 5 + Math.sin(i) * 2;
         const curlCount = 2; // Fixed smaller number of curls
         
@@ -117,7 +115,7 @@ const blob: Creature = {
           if (j === 0) {
             ctx.lineTo(curlX, curlY);
           } else {
-            // Simpler control points with less wiggle
+            // Wiggle pattern
             ctx.quadraticCurveTo(
               hairX + Math.sin((j-0.5)/curlCount * Math.PI * 2 * curlDirection) * curlTightness,
               chestCenterY + offsetY + (j-0.5)/curlCount * hairLength,
@@ -129,6 +127,9 @@ const blob: Creature = {
         
         ctx.stroke();
       }
+      
+      // Reset line width for limbs
+      ctx.lineWidth = 20;
     }
     
     // Draw left side as one continuous bezier curve
