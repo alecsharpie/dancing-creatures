@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://alecsharpie.github.io/dance",
+  "homepage": "https://alecsharpie.github.io/dancing-creatures",
   "scripts": {
+    "preview": "vite preview",
     "dev": "vite",
     "build": "tsc && vite build && npm run copy-models",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "copy-models": "cp -r public/models dist/models",
-    "download-models": "node scripts/download-model.js"
+    "download-models": "node scripts/download-model.js",
+    "copy-models": "cp -r public/models dist/models"
   },
   "dependencies": {
     "@tensorflow-models/pose-detection": "^2.1.3",

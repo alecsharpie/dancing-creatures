@@ -116,7 +116,6 @@ const PoseEstimation: React.FC = () => {
       if (detector) {
         logger.info("Disposing previous detector");
         await detector.dispose();
-        // Set to null immediately to prevent race conditions
         setDetector(null);
       }
       
@@ -124,12 +123,22 @@ const PoseEstimation: React.FC = () => {
         ? poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING
         : poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING;
       
-      logger.info("Creating detector with CDN model");
+      // Use local model path with the correct base path
+      // The issue is that we need to include the base path for development
+      const baseUrl = import.meta.env.DEV ? '' : '/dancing-creatures';
+      const modelPath = multiPoseMode 
+        ? `${baseUrl}/models/movenet/multipose/lightning/1/model.json`
+        : `${baseUrl}/models/movenet/singlepose/lightning/4/model.json`;
+      
+      logger.info("Creating detector with local model", { modelPath, baseUrl, isDev: import.meta.env.DEV });
       const newDetector = await poseDetection.createDetector(
         poseDetection.SupportedModels.MoveNet,
-        { modelType }
+        { 
+          modelType,
+          modelUrl: modelPath 
+        }
       );
-      logger.success("Successfully created detector with CDN model");
+      logger.success("Successfully created detector with local model");
       
       setDetector(newDetector);
     } catch (error) {
@@ -200,11 +209,10 @@ const PoseEstimation: React.FC = () => {
 
     setupCamera();
   }, []);
-
   useEffect(() => {
     let animationFrameId: number;
     let isDetecting = false;
-
+  
     const detectPose = async () => {
       if (
         isChangingMode ||
@@ -217,39 +225,39 @@ const PoseEstimation: React.FC = () => {
         animationFrameId = requestAnimationFrame(detectPose);
         return;
       }
-
+  
       isDetecting = true;
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-
+  
       if (!ctx) {
         logger.warn("Could not get canvas context");
         isDetecting = false;
         animationFrameId = requestAnimationFrame(detectPose);
         return;
       }
-
+  
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+  
       if (debugMode) {
         ctx.save();
         ctx.scale(-1, 1);
         ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
         ctx.restore();
       }
-
+  
       try {
-        // Don't use tf.tidy with async functions
+        // Create a new scope to help with memory management
         const poses = await detector.estimatePoses(video);
         
-        // Clean up tensors manually after using them
-        tf.engine().endScope();
+        // Explicitly start and end tf.tidy scope
+        tf.engine().startScope();
         
         if (poses.length > 0) {
           logger.info(`Detected ${poses.length} poses`);
         }
-
+  
         poses.forEach((pose, index) => {
           const keypoints = pose.keypoints.map((keypoint) => ({
             name: keypoint.name || 'unknown',
@@ -257,20 +265,14 @@ const PoseEstimation: React.FC = () => {
             y: (keypoint.y / video.videoHeight) * canvas.height,
             score: keypoint.score
           }));
-
-          // Log keypoint scores if in debug mode
-          if (debugMode && index === 0) {
-            const scores = keypoints.map(kp => ({ name: kp.name, score: kp.score }));
-            logger.info("Keypoint scores for first pose:", scores);
-          }
-
+  
           const creature = creatures[currentCreature];
           const hue = multiPoseMode ? (index * 137) % 360 : 120;
           ctx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.7)`;
-
+  
           creature.limbs(ctx, keypoints);
           creature.eyes(ctx, keypoints);
-
+  
           if (debugMode) {
             keypoints.forEach((keypoint) => {
               ctx.beginPath();
@@ -282,20 +284,25 @@ const PoseEstimation: React.FC = () => {
             });
           }
         });
+        
+        // End the scope to free up memory
+        tf.engine().endScope();
       } catch (error) {
         logger.error("Error in pose estimation:", error);
       }
-
+  
       isDetecting = false;
       animationFrameId = requestAnimationFrame(detectPose);
     };
-
+  
     detectPose();
-
+  
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
+      // Make sure to clean up any lingering tensors
+      tf.engine().disposeVariables();
     };
   }, [
     detector,

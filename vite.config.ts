@@ -5,4 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/dancing-creatures/', // Set this to match your GitHub Pages repository name
+  // Ensure static assets are properly served
+  publicDir: 'public',
+  build: {
+    outDir: 'dist'
+  }
 })
