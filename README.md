@@ -1,6 +1,8 @@
-# Dancing Creatures
+# Dancing Creatures 🕺💃
 
-A fun web application that uses TensorFlow.js and the MoveNet pose detection model to transform your movements into animated creatures. Move in front of your camera and watch as the app tracks your poses in real-time!
+A fun interactive web application that transforms your movements into colorful animated creatures in real-time. Using TensorFlow.js and the MoveNet pose detection model, this project creates a playful experience where your body becomes a living digital puppet.
+
+![Dancing Creatures Demo](screenshot.png)
 
 ## Features
 

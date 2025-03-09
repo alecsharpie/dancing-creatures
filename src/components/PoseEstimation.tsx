@@ -514,9 +514,9 @@ const PoseEstimation: React.FC = () => {
             // Clear the debug canvas first
             debugCtx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw video feed with consistent opacity
+            // Draw video feed with opacity
             debugCtx.save();
-            debugCtx.globalAlpha = 0.9; // Higher opacity for smoother video
+            debugCtx.globalAlpha = 0.9;
             debugCtx.scale(-1, 1);
             debugCtx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
             debugCtx.restore();
