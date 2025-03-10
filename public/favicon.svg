@@ -1,8 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <circle cx="50" cy="50" r="45" fill="#3b82f6" />
-  <circle cx="35" cy="40" r="8" fill="white" />
-  <circle cx="65" cy="40" r="8" fill="white" />
-  <circle cx="35" cy="40" r="3" fill="black" />
-  <circle cx="65" cy="40" r="3" fill="black" />
-  <path d="M30,65 Q50,80 70,65" stroke="white" stroke-width="5" fill="none" />
+  <!-- Rainbow background -->
+  <defs>
+    <radialGradient id="rainbowGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#FF0000" />
+      <stop offset="16%" stop-color="#FF9900" />
+      <stop offset="33%" stop-color="#FFFF00" />
+      <stop offset="50%" stop-color="#00FF00" />
+      <stop offset="66%" stop-color="#0099FF" />
+      <stop offset="83%" stop-color="#6633FF" />
+      <stop offset="100%" stop-color="#FF00FF" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Blobby head shape -->
+  <path d="M50,10 
+           C70,5 85,20 90,40 
+           C95,60 85,80 65,85 
+           C45,90 25,85 15,65 
+           C5,45 15,15 50,10" 
+        fill="url(#rainbowGradient)" />
+  
+  <!-- Eyes (white circles with black pupils) -->
+  <circle cx="35" cy="30" r="10" fill="white" />
+  <circle cx="65" cy="30" r="10" fill="white" />
+  <circle cx="35" cy="30" r="4" fill="black" />
+  <circle cx="65" cy="30" r="4" fill="black" />
+  
+  <!-- Smile -->
+  <path d="M35,65 Q50,80 65,65" stroke="white" stroke-width="5" fill="none" />
+  
+  <!-- Wacky inflatable arms - moved away from face -->
+  <path d="M20,50 Q5,35 10,15 Q15,5 5,0" stroke="white" stroke-width="5" fill="none" />
+  <path d="M80,50 Q95,35 90,15 Q85,5 95,0" stroke="white" stroke-width="5" fill="none" />
+
 </svg>
