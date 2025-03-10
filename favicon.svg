@@ -1,8 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
   <circle cx="50" cy="50" r="45" fill="#3b82f6" />
+  
+  <!-- Eyes (white circles with black pupils) -->
   <circle cx="35" cy="40" r="8" fill="white" />
   <circle cx="65" cy="40" r="8" fill="white" />
   <circle cx="35" cy="40" r="3" fill="black" />
   <circle cx="65" cy="40" r="3" fill="black" />
+  
+  <!-- Smile -->
   <path d="M30,65 Q50,80 70,65" stroke="white" stroke-width="5" fill="none" />
+  
+  <!-- Simplified limbs representing the blob creature -->
+  <path d="M25,45 Q15,60 20,80" stroke="white" stroke-width="4" fill="none" />
+  <path d="M75,45 Q85,60 80,80" stroke="white" stroke-width="4" fill="none" />
 </svg>
