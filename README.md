@@ -2,7 +2,7 @@
 
 A fun interactive web application that transforms your movements into colorful animated creatures in real-time. Using TensorFlow.js and the MoveNet pose detection model, this project creates a playful experience where your body becomes a living digital puppet.
 
-![Dancing Creatures Demo](screenshot.png)
+![Dancing Creatures Screenshot](public/app-screenshot.png)
 
 ## Features
 
@@ -14,11 +14,13 @@ A fun interactive web application that transforms your movements into colorful a
 ## Demo
 
 Visit the live demo: [Dancing Creatures](https://alecsharpie.github.io/dancing-creatures)
+You need to have most of your body visible in the camera for the AI to detect your pose. Multiple people are supported.
 
 ## Setup
 
 ### Prerequisites
 
+- Webcam
 - Node.js
 - npm
 

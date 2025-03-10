@@ -1,4 +1,4 @@
-favicon.svg
-add to website
-add license
-tidy readme
+✓ favicon.svg 
+✓ add license
+✓ tidy readme
+✓ add screenshot to readme
